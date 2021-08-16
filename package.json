@@ -1,0 +1,18 @@
+{
+  "name": "graphql-practice",
+  "version": "1.0.0",
+  "description": "Project For GraphQL Practice",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://hangem422@github.com/hangem422/graphql-practice.git"
+  },
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hangem422/graphql-practice/issues"
+  },
+  "homepage": "https://github.com/hangem422/graphql-practice#readme"
+}
