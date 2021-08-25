@@ -1,99 +1,22 @@
-const { ApolloServer } = require("apollo-server");
-const { users, photos, tags } = require("./store");
+const { ApolloServer } = require("apollo-server-express");
+const express = require("express");
+const fs = require("fs");
 
-const typeDefs = `
-  enum PhotoCategory {
-    SELFIE
-    PROTRAIT
-    ACTION
-    LANDSCAPE
-    GRAPHIC
-  }
+const typeDefs = fs.readFileSync("./typeDefs.graphql", "utf-8");
+const resolvers = require("./resolvers");
 
-  type User {
-    githubLogin: ID!
-    name: String
-    avatar: String
-    postedPhotos: [Photo!]!
-    inPhotos: [Photo!]!
-  }
+const app = express();
+const server = new ApolloServer({ typeDefs, resolvers });
 
-  type Photo {
-    id: ID!
-    url: String!
-    name: String!
-    description: String
-    category: PhotoCategory!
-    postedBy: User!
-    taggedUsers: [User!]!
-  }
+// apollo-server-express version 3에서 applyMiddleware 하기 전 await server.start()를 실행하라는 버그가 있다.
+// apollo-server-express@^2 다운그레이드 해서 사용하면 문제가 해결된다.
+// https://github.com/nestjs/graphql/issues/1621#issuecomment-878474079
+server.applyMiddleware({ app });
 
-  input PostPhotoInput {
-    name: String!
-    category: PhotoCategory = PROTRAIT
-    description: String
-  }
+app.get("/", (req, res) => res.send("PhotoShare API에 오신 것을 환영합니다."));
 
-  type Query {
-    totalPhotos: Int!
-    allPhotos: [Photo!]!
-  }
-
-  type Mutation {
-    postPhoto(input: PostPhotoInput!): Photo!
-  }
-`;
-
-let _id = photos.length;
-
-const resolvers = {
-  Query: {
-    totalPhotos() {
-      return photos.length;
-    },
-    allPhotos() {
-      return photos;
-    },
-  },
-  Mutation: {
-    postPhoto(parent, args) {
-      const newPhoto = { id: _id++, ...args.input };
-      photos.push(newPhoto);
-      return newPhoto;
-    },
-  },
-  Photo: {
-    url(parent) {
-      return `http://yoursite.com/img/${parent.id}.jpg`;
-    },
-    postedBy(parent) {
-      return users.find((p) => p.githubLogin === parent.githubUser);
-    },
-    taggedUsers(parent) {
-      return tags
-        .filter((tag) => tag.photoID === parent.id)
-        .map((tag) => tag.userID)
-        .map((userID) => users.find((user) => user.githubLogin === userID));
-    },
-  },
-  User: {
-    postedPhotos(parent) {
-      return photos.filter((p) => p.githubUser === parent.githubLogin);
-    },
-    inPhotos(parent) {
-      return tags
-        .filter((tag) => tag.userID === parent.id)
-        .map((tag) => tag.photoID)
-        .map((photoID) => photos.find((photo) => photo.id === photoID));
-    },
-  },
-};
-
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
+app.listen({ port: 4000 }, () => {
+  console.log(
+    `GraphQL Server running @ http://localhost:4000${server.graphqlPath}`
+  );
 });
-
-server
-  .listen()
-  .then(({ url }) => console.log(`GraphQL Service running on ${url}`));
