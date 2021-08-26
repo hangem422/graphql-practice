@@ -5,11 +5,22 @@ let _id = photos.length;
 
 module.exports = {
   Query: {
-    totalPhotos() {
-      return photos.length;
+    totalPhotos(parent, args, { db }) {
+      console.log("??");
+      const col = db.collection("photos");
+      return col.estimatedDocumentCount();
     },
-    allPhotos(parent, args) {
-      return photos;
+    totalUsers(parent, args, { db }) {
+      const col = db.collection("users");
+      return col.estimatedDocumentCount();
+    },
+    allPhotos(parent, args, { db }) {
+      const col = db.collection("photos");
+      return col.find().toArray();
+    },
+    allUsers(parent, args, { db }) {
+      const col = db.collection("users");
+      return col.find().toArray();
     },
   },
   Mutation: {
