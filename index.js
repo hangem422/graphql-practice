@@ -14,7 +14,12 @@ async function start(port) {
   const client = await MongoClient.connect(MONGO_DB, { useNewUrlParser: true });
   const db = client.db();
 
-  const context = { db };
+  const context = async ({ req }) => {
+    const githubToken = req.headers.authorization;
+    const currentUser = await db.collection("users").findOne({ githubToken });
+    return { db, currentUser };
+  };
+
   const server = new ApolloServer({ typeDefs, resolvers, context });
 
   // apollo-server-express version 3에서 applyMiddleware 하기 전 await server.start()를 실행하라는 버그가 있다.
