@@ -1,10 +1,9 @@
-const { GraphQLScalarType } = require("graphql");
-const fetch = require("node-fetch");
+import { GraphQLScalarType } from "graphql";
+import fetch from "node-fetch";
 
-const authorizeWithGithub = require("./helpers/github");
-// const { users, photos, tags } = require("./store");
+import authorizeWithGithub from "./helpers/github.js";
 
-module.exports = {
+const resolver = {
   Query: {
     me(parent, args, { currentUser }) {
       return currentUser;
@@ -118,8 +117,9 @@ module.exports = {
     // },
   },
   User: {
-    postedPhotos(parent) {
-      return photos.filter((p) => p.githubUser === parent.githubLogin);
+    postedPhotos(parent, args, { db }) {
+      const col = db.collection("photos");
+      return col.findOne({ githubUser: parent.githubLogin });
     },
     // inPhotos(parent) {
     //   return tags
@@ -142,3 +142,5 @@ module.exports = {
     },
   }),
 };
+
+export default resolver;

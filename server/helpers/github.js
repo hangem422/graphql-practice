@@ -1,4 +1,6 @@
-const fetch = require("node-fetch");
+// const fetch = require("node-fetch");
+
+import fetch from "node-fetch";
 
 /**
  * @description Credentials를 전달하여 깃허브 엑세스 토큰을 요청합니다.
@@ -43,4 +45,4 @@ async function authorizeWithGithub(credentials) {
   return { ...githubUser, access_token };
 }
 
-module.exports = authorizeWithGithub;
+export default authorizeWithGithub;
