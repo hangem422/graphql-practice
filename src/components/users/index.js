@@ -21,6 +21,7 @@ function Users() {
   const queryCallback = useCallback(
     ({ data, loading, refetch }) => {
       if (loading) return <p>사용자 불러오는 중...</p>;
+
       return (
         <Mutation
           mutation={MUTATION.ADD_FAKE_USERS_MUTATION}

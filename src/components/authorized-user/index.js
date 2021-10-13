@@ -1,35 +1,47 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useHistory } from "react-router-dom";
-import { Mutation } from "react-apollo";
+import { Mutation, useQuery } from "react-apollo";
 
 import { QUERY, MUTATION } from "../../graphql";
-import GithubLoginBtn from "./github-login-btn";
+import Me from "./me";
 
 function AuthorizedUser({ clientID }) {
   const [signingIn, setSigningIn] = useState(false);
   const githubMutation = useRef(null);
+
+  const query = useQuery(QUERY.USER_QUERY);
 
   const {
     location: { pathname, search },
     replace,
   } = useHistory();
 
-  const mutationHoc = useCallback(
-    (githubAuth) => {
-      githubMutation.current = githubAuth;
-      return <GithubLoginBtn clientID={clientID} disabled={signingIn} />;
-    },
-    [clientID, signingIn]
-  );
-
   const authCallback = useCallback(
     (_, { data }) => {
-      console.log(data);
       localStorage.setItem("graphql-practice-token", data.githubAuth.token);
       setSigningIn(false);
       replace(pathname);
     },
     [pathname, replace]
+  );
+
+  const requestCode = useCallback(() => {
+    window.location = `https://github.com/login/oauth/authorize?client_id=${clientID}&scope=user`;
+  }, [clientID]);
+
+  const logout = useCallback(() => {
+    localStorage.removeItem("graphql-practice-token");
+    query.refetch();
+  }, [query]);
+
+  const mutationHoc = useCallback(
+    (githubAuth) => {
+      githubMutation.current = githubAuth;
+      return (
+        <Me signingIn={signingIn} requestCode={requestCode} logout={logout} />
+      );
+    },
+    [signingIn, requestCode, logout]
   );
 
   useEffect(() => {
@@ -45,7 +57,7 @@ function AuthorizedUser({ clientID }) {
     <Mutation
       mutation={MUTATION.GITHUB_AUTH_MUTATION}
       update={authCallback}
-      refetchQueries={QUERY.USER_QUERY}
+      refetchQueries={[{ query: QUERY.USER_QUERY }]}
     >
       {mutationHoc}
     </Mutation>
