@@ -2,13 +2,23 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { BrowserRouter } from "react-router-dom";
 import { ApolloProvider } from "react-apollo";
-import ApolloClient from "apollo-boost";
+import ApolloClient, { InMemoryCache } from "apollo-boost";
+import { persistCache } from "apollo-cache-persist";
 import dotenv from "dotenv";
 
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 
+const cache = new InMemoryCache();
+persistCache({ cache, storage: localStorage });
+
+if (localStorage["apollo-cache-persist"]) {
+  const cacheData = JSON.parse(localStorage["apollo-cache-persist"]);
+  cache.restore(cacheData);
+}
+
 const client = new ApolloClient({
+  cache,
   uri: "http://localhost:4000/graphql",
   request: (operation) => {
     operation.setContext((context) => ({

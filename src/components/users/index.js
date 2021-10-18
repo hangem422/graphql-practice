@@ -5,14 +5,21 @@ import { QUERY, MUTATION } from "../../graphql";
 import UserList from "./user-list";
 
 function Users() {
+  const updateCache = useCallback((cache, { data: { addFakeUsers } }) => {
+    const data = cache.readQuery({ query: QUERY.USER_QUERY });
+    data.totalUsers += addFakeUsers.length;
+    data.allUsers = data.allUsers.concat(addFakeUsers);
+    cache.writeQuery({ query: QUERY.USER_QUERY });
+  }, []);
+
   const mutationHoc = useCallback(
-    (data, refetch) => (addFakeUser) =>
+    (data, refetch) => (addFakeUsers) =>
       (
         <UserList
           count={data.totalUsers}
           users={data.allUsers}
           refetchUsers={refetch}
-          addUser={addFakeUser}
+          addUser={addFakeUsers}
         />
       ),
     []
@@ -26,13 +33,13 @@ function Users() {
         <Mutation
           mutation={MUTATION.ADD_FAKE_USERS_MUTATION}
           variables={{ count: 1 }}
-          refetchQueries={[{ query: QUERY.USER_QUERY }]}
+          update={updateCache}
         >
           {mutationHoc(data, refetch)}
         </Mutation>
       );
     },
-    [mutationHoc]
+    [mutationHoc, updateCache]
   );
 
   return <Query query={QUERY.USER_QUERY}>{queryCallback}</Query>;

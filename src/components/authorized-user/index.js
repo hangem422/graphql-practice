@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useHistory } from "react-router-dom";
-import { Mutation, useQuery } from "react-apollo";
+import { Mutation, useApolloClient } from "react-apollo";
 
 import { QUERY, MUTATION } from "../../graphql";
 import Me from "./me";
@@ -9,7 +9,7 @@ function AuthorizedUser({ clientID }) {
   const [signingIn, setSigningIn] = useState(false);
   const githubMutation = useRef(null);
 
-  const query = useQuery(QUERY.USER_QUERY);
+  const apollo = useApolloClient();
 
   const {
     location: { pathname, search },
@@ -31,8 +31,11 @@ function AuthorizedUser({ clientID }) {
 
   const logout = useCallback(() => {
     localStorage.removeItem("graphql-practice-token");
-    query.refetch();
-  }, [query]);
+
+    const data = apollo.readQuery({ query: QUERY.USER_QUERY });
+    data.me = null;
+    apollo.writeQuery({ query: QUERY.USER_QUERY, data });
+  }, [apollo]);
 
   const mutationHoc = useCallback(
     (githubAuth) => {
